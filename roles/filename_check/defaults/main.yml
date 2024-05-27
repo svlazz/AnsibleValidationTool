@@ -1,0 +1,13 @@
+---
+# defaults file for filename_check
+result_key: "filename_check_ok"
+playbook_name_with_extension: "{{ path | basename }}"
+playbook_name: "{{ playbook_name_with_extension | regex_replace('(.*)\\..*', '\\1') }}"
+playbook_parts: "{{ playbook_name.split('_') }}"
+comprobaciones:
+  comienzo: false
+  entorno: false
+  provider: false
+  longitud_nombre: false
+  resultado: false
+default_message: "There are errors in file name."

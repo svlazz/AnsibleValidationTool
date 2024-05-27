@@ -1,0 +1,25 @@
+---
+- name: Description of playbook "{{ mikey }}"
+  hosts: localhost
+  gather_facts: true
+  vars:
+    key_duplicada: "Valor inicial"
+    key_duplicada: "Valor sobreescrito"
+    var_bien_diccionario: "Valor puesto en el diccionario"
+  tasks:
+    - name: Sobreescritura de varuable con diccionario
+      ansible.builtin.slurp:
+        src: ./variable_duplication.yml
+      register: var_bien_diccionario
+    - name: Registro de variable que no interfiere con otras
+      ansible.builtin.slurp:
+        src: ./playbook_prueba.yml
+      register: texto
+    - name: Definicion de variable con set fact
+      set_fact:
+        var_dup_fact: "Valor inicial"
+    - name: Define dos variables con set fact
+      set_fact:
+        varfact_nodup: "valor 1"
+        var_dup_fact: "Valor sobreescrito fact"
+        cacheable: false  

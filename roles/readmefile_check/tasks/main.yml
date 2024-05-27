@@ -1,0 +1,76 @@
+---
+# tasks file for readmefile_check
+
+- name: Check if file exists
+  stat:
+    path: "{{ main_path }}"
+  register: file_status
+
+- name: Check if file exists
+  stat:
+    path: "{{ main_path }}/README.md"
+  register: readme_exists 
+
+- name: ahmed
+  debug:
+    var: main_path
+
+
+- name: Tareas
+  block:
+    - name: Read README content
+      slurp:
+        src: "{{ main_path }}/README.md" 
+      register: readme_content
+
+
+      
+       
+    - name: File content to string
+      set_fact:
+        readme_content_str: "{{ readme_content['content'] | b64decode }}"
+
+    - name: Ver readme
+      debug:
+        var: readme_content_str
+
+    - name: Update readme_validation dictionary for readme conditions
+      set_fact:
+        readme_validation:  
+          content_table: "{{ '## Table of Contents' in readme_content_str }}"
+          variables: "{{ '## Variables' in readme_content_str }}"
+          description: "{{ '## Description' in readme_content_str }}"
+          use_cases: "{{ '## Use Cases' in readme_content_str }}"
+          examples: "{{ '## Examples' in readme_content_str }}"
+
+    - name: Check if all readme validation conditions are met
+      set_fact:
+        playbook_valid: "{{ readme_validation | dict2items | map(attribute='value') | map('bool') | list }}"
+      run_once: true
+
+    - name: Check results
+      set_fact:
+        resultado: "{{ playbook_valid | map('bool') | select('==', true) | list | length == playbook_valid | length }}"
+
+    - name: Show validation results
+      set_fact:
+        output_msg: "{{ output_msg + ['[OK] Readme file follow the rules.'] }}"
+        output_sections: "{{ output_sections | default({}) | combine({result_key: resultado | bool}) }}"
+      when: resultado
+
+    - name: Show validation results
+      set_fact:
+        output_msg: "{{ output_msg + ['[KO] The README File doesnt follow the rules: ' + readme_validation | to_nice_json] }}"
+        output_sections: "{{ output_sections | default({}) | combine({result_key: resultado | bool}) }}"
+      when: not resultado
+ 
+  rescue:
+    - name: Show validation results
+      set_fact:
+        output_msg: "{{ output_msg + ['[KO] README file doesnt exists.'] }}"
+        output_sections: "{{ output_sections | default({}) | combine({result_key: false | bool}) }}"
+      when: not readme_exists.stat.exists
+  always:
+    - name: Readme file status
+      debug:
+        var: readme_validation

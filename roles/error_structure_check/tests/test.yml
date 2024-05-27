@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  remote_user: root
+
+  vars:
+      output_msg: []
+      output_sections: {}
+
+  tasks:
+    - name: Check the error control structures
+      ansible.builtin.include_role:
+        name: error_structure_check
+
+    - name: Show result messages
+      ansible.builtin.debug:
+        var: output_msg
+
+    - name: Show result summary
+      ansible.builtin.debug:
+        var: output_sections

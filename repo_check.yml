@@ -1,0 +1,108 @@
+---
+- name: Playbook check
+  hosts:  "{{ (ansible_play_hosts_all is defined and (ansible_play_hosts_all | length) > 0) | ternary(ansible_play_hosts_all[0] ,'localhost') }}"
+  vars:
+    repository_var: {}
+    repo_output_sections: {}
+    overall_repo: true
+    log_path: "/tmp/dir_logs"
+    repo_clone_path: "/tmp/repo_clone"
+  tasks:
+ 
+    - name: Build repo clone full path
+      set_fact:
+        repo_clone_path: "{{ repo_clone_path }}/{{ tower_job_id }}_{{ ansible_date_time.iso8601_basic_short }}"
+
+    - name: Create clone repo path if needed
+      ansible.builtin.file:
+        path: "{{ repo_clone_path }}"
+        state: directory
+
+    - name: Create logs path if needed
+      ansible.builtin.file:
+        path: "{{ log_path }}"
+        state: directory
+
+    - name: print repourl
+      debug:
+        var: repo_url
+
+    - name: Clone git repository
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_clone_path }}"
+        clone: yes
+        update: yes
+        version: dev
+      become: false
+
+
+
+    - name: Define main_path to be analyzed by the tool
+      set_fact:
+        main_path: "{{ repo_clone_path }}"
+
+    - name: Check if file exists
+      stat:
+        path: "{{ main_path }}"
+      register: file_status
+
+    - name: Process tasks if file exists
+      block:
+
+        - name: Get list of files
+          read_path:
+            main_path: "{{ main_path }}"
+          register: list_files
+
+        - name: print
+          ansible.builtin.debug:
+            var: list_files
+
+        - name: Final list
+          ansible.builtin.set_fact:
+           final_list: "{{ list_files.omega_dict.main_dir + list_files.omega_dict.playbooks + list_files.omega_dict.roles + list_files.omega_dict.tasks }}"
+
+        - name: Print
+          ansible.builtin.debug:
+            var: final_list
+
+        - name: Include playbooks
+          block:
+            - name: Include playbook
+              ansible.builtin.include_tasks:
+                file: playbook_check.yml
+              loop: "{{ final_list }}"
+              vars:
+                path: "{{ item }}"
+
+        - name: Print final output
+          ansible.builtin.set_fact:
+            repository_var: "{{ repository_var | combine({main_path: repo_output_sections, 'overall_repo': overall_repo}) }}"
+
+        - name: Print variable
+          ansible.builtin.debug:
+            var: repository_var
+
+        - name: Create directory in $HOME
+          ansible.builtin.file:
+            path: $HOME/dir_informe
+            state: directory
+            mode: '0755'
+
+        - name: Generate file from template
+          template:
+            src: web_log.html
+            dest: "/$HOME/dir_informe/informe_{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M-%S') }}.html"
+
+        - name: Repo failed
+          ansible.builtin.fail:
+            msg: "Repo not passed all checks. LOGS: /tmp/dir_logs"
+          when: overall_repo == false
+
+      when: file_status.stat.exists
+
+    - name: Notify if file does not exist
+      ansible.builtin.fail:
+        msg: "File {{ main_path }} was not found."
+      when: not file_status.stat.exists

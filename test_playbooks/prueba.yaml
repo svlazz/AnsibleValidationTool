@@ -1,0 +1,32 @@
+---
+- name: Playbook de ejemplo
+  hosts: localhost
+  become: yes
+  tasks:
+    - name:
+      shell: ls
+      args:
+        chdir: /ruta/a/tu/directorio
+
+    - name: Crea
+      file:
+        path: /ruta/a/tu/nuevo/directorio
+        state: directory
+    
+    - name: crea un nuevo directorio
+      file:
+        path: /ruta/a/tu/nuevo/directorio
+        state: directory
+
+    - shell: cd /ruta/a/tu/nuevo/directorio
+
+    - package:
+        name: nginx
+        state: present
+
+    - name: Hola esto es una prueba
+      shell: ls
+      args:
+        chdir: /ruta/a/tu/directorio
+      
+

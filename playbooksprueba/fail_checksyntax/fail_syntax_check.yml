@@ -1,0 +1,36 @@
+---
+# Description
+- name: Fail at the check syntax test
+  hosts: localhost
+  gather_facts: true
+  vars:
+       app_name: "ExampleName"
+       app_version: "1.0"
+  tasks:
+    - name: Handle error with block
+      block:
+        - name: Show info application
+          debu:
+            msg: "Application Name: {{ app_name }}, Version: {{ app_version }}"
+            
+        - name: Install packages
+          ansible.builtin.package:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - nginx
+            - vim
+          become: yes
+
+        - name: Create file config
+          ansible.builtin.template:
+            src: prueba.txt
+            dest: "/etc/{{ app_name }}/config.ini"
+          notify: Restart Application
+  handlers:
+    - name: Restart Application
+      ansible.builtin.service:
+        name: "{{ app_name }}"
+        state: restarted
+      become: yes
+

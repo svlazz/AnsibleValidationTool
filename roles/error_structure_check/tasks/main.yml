@@ -1,0 +1,14 @@
+---
+- name: Check the error control structures
+  ansible_error_structure_module:
+    playbook: "{{ path }}"
+  register: playbook_summary
+
+- name: Parsing the exit output from previous python module
+  set_fact:
+    report: "{{ playbook_summary.msg.split('\n') }}"
+
+- name: Report of the structures found in the playbook
+  set_fact:
+    output_msg: '{{ output_msg + report }}'
+    output_sections: '{{ output_sections | default({}) | combine ({ output_key : True }) }}'

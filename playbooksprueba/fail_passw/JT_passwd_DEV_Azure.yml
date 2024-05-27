@@ -1,0 +1,10 @@
+---
+- name: Playbook con fallo password
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Preguntar contraseña
+      set_fact:
+        password: "Hola"
+        contra: "Buenas tardes"
+        password: "vault"

@@ -1,0 +1,124 @@
+---
+- name: Handle errors
+  block:
+    - name: "Check Ansible version"
+      ansible.builtin.command: ansible --version
+      register: ansible_version
+
+    - name: "Convert to number ansible version"
+      set_fact:
+         num_ansible: "{{ ansible_version.string.split('.')[0] | float + (ansible_version.string.split('.')[1] | float * 0.01)}}"
+
+    - name: "str to float"
+      set_fact:
+        flt_ansible: "{{ num_ansible | float }}"
+
+    - name: "Check python version"
+      ansible.builtin.command: "{{ ansible_python_interpreter }} --version"
+      register: py_version
+
+    - name: "get python version number"
+      set_fact:
+        num_py: "{{ py_version.stdout | regex_replace('^Python ', '') | trim }}"
+
+    - name: "Change version to number"
+      set_fact:
+        version_py: "{{ num_py.split('.')[0] | float + (num_py.split('.')[1] | float * 0.01) }}"
+
+    - name: str to float
+      set_fact:
+        int_py: "{{ version_py | float }}"
+     
+    - name: Set default output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({ key_version : False }) }}'
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.16', '==')
+        - int_py is version('3.1', '==') or
+          int_py is version('3.11', '==') or
+          int_py is version('3.12', '==')
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.15', '==')
+        - int_py is version('3.9', '==') or
+          int_py is version('3.1', '==') or
+          int_py is version('3.11', '==')
+
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.14', '==')
+        - int_py is version('3.9', '==') or
+          int_py is version('3.1', '==') or
+          int_py is version('3.11', '==')
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.13', '==')
+        - int_py is version('3.8', '==') or
+          int_py is version('3.9', '==') or
+          int_py is version('3.1', '==')
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.12', '==')
+        - int_py is version('3.8', '==') or
+          int_py is version('3.9', '==') or
+          int_py is version('3.1', '==')
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.11', '==')
+        - int_py is version('3.5', '==') or
+          int_py is version('3.6', '==') or
+          int_py is version('3.7', '==') or
+          int_py is version('3.8', '==') or
+          int_py is version('3.9', '==') or
+          int_py is version('2.7', '==')
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.10', '==')
+        - int_py is version('3.5', '==') or
+          int_py is version('3.6', '==') or
+          int_py is version('3.7', '==') or
+          int_py is version('3.8', '==') or
+          int_py is version('3.9', '==') or
+          int_py is version('2.7', '==')
+
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : True }) }}'
+      when:
+        - flt_ansible is version('2.9', '==')
+        - int_py is version('3.5', '==') or
+          int_py is version('3.6', '==') or
+          int_py is version('3.7', '==') or
+          int_py is version('3.8', '==') or
+          int_py is version('2.7', '==')
+
+  rescue:
+    - name: Set output_msg
+      set_fact:
+        output_msg: "{{ output_msg + [ 'Ansible version errors' + flt_ansible  ] }}"
+    - name: Set output_sections
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_version : False }) }}'
+

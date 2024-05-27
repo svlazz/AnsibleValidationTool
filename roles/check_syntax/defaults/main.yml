@@ -1,0 +1,4 @@
+---
+# defaults file for check_syntax
+
+result_key: "syntax_check_ok"

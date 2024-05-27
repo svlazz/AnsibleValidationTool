@@ -1,0 +1,54 @@
+---
+    - name: Gets playbook directory
+      set_fact:
+        playbook_directory: "{{ path | dirname }}"
+
+    - name: Debug playbook_parts
+      set_fact:
+        playbook_name_with_extension: "{{ playbook_directory | basename }}"
+        playbook_name: "{{ playbook_name_with_extension | regex_replace('(.*)\\..*', '\\1') }}"
+        playbook_parts: "{{ playbook_name.split('_') }}"
+
+
+    - name: Check variables
+      set_fact:
+        comprobaciones:
+          comienzo: "{{ playbook_parts[0] == 'JT' }}"
+          longitud_nombre: "{{ playbook_parts[1] | length < 10 }}"
+          entorno: "{{ playbook_parts[2] in ['PRO', 'PRE', 'DEV'] }}"
+          provider: "{{ playbook_parts[3].split('.')[0] in ['Azure', 'AWS', 'Onprem'] }}"    
+      when: playbook_parts | length > 3
+
+    - name: Check if all playbook validation conditions are met
+      set_fact:
+        playbook_valid: "{{ comprobaciones | dict2items | map(attribute='value') | map('bool') | list }}"
+      when: comprobaciones is defined
+
+    - name: Check results
+      set_fact:
+        resultado: "{{ playbook_valid | map('bool') | select('==', true) | list | length == playbook_valid | length }}"
+      when: (playbook_valid is defined) and (not playbook_name == 'main')
+
+
+    - name: Check results
+      set_fact:
+        resultado: "{{ playbook_name == 'main' }}"
+      when: playbook_name == 'main'
+
+    - name: Show validation results
+      set_fact:
+        output_msg: '{{ output_msg + ["[OK] The file has a correct name."] }}'
+        output_sections: '{{ output_sections | default({}) | combine ({  result_key : resultado  }) }}'
+      when: resultado
+      ignore_errors: true
+
+    - name: Show validation results
+      set_fact:
+        output_msg: "{{ output_msg + ['[KO] There are ERRORS on file name.'] }}"
+        output_sections: '{{ output_sections | default({}) | combine ({  result_key : resultado  }) }}'
+      when: not resultado
+
+    - name: Resultados filename check
+      debug:
+        var: comprobaciones
+

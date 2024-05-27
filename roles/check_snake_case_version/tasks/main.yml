@@ -1,0 +1,4 @@
+---
+# tasks file for check_project
+- name: "Execute Check snake case format"
+  include_tasks: snake_case_lint.yml

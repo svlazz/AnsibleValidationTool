@@ -1,0 +1,10 @@
+---
+# defaults file for template_spaces
+#key in wich store de result of the check
+result_key: "template_spaces_ok"
+
+# Regex to detect bad jija template starting annotation: {{+any non white character
+bad_template_start: "{{'{{[^\\s]'}}"
+
+# Regex to detect bad jija template ending annotation: }}+any non white character
+bad_template_end: "{{'[^\\s]}}'}}"

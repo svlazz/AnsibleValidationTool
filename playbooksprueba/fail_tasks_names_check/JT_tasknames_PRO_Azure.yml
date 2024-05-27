@@ -1,0 +1,37 @@
+---
+- name: Instalar y configurar Nginx en Ubuntu
+  hosts: all
+  become: yes
+
+  tasks:
+    # [Incorrecto] No tiene al menos 10 caracteres
+    - name: Cache
+      apt:
+        update_cache: yes
+
+    # [Incorrecto] No empieza por mayuscula
+    - name: instala nginx
+      apt:
+        name: nginx
+        state: present
+
+    # [Correcto] No empieza por mayuscula pero empieza por [ seguido de mayuscula y tiene +10 caracteres
+    - name: "[Anotacion] Habilitar servicio Ngin"
+      systemd:
+        name: nginx
+        enabled: yes
+        state: started
+
+    # Los block no hacen falta que tengan name
+    - block:
+      # [Incorrecto] No tiene el "- name: " definido
+      - template:
+          src: index.html.j2
+          dest: /var/www/tu_sitio/index.html
+      
+  handlers:
+    # [Incorrecto] No empieza por mayuscula (Los handlers tambien deben seguir el formato determinado)
+    - name: reiniciar Nginx
+      systemd:
+        name: nginx
+        state: restarted

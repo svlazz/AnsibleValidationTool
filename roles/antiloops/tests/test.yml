@@ -1,0 +1,31 @@
+---
+- name: Playbook check
+  hosts: localhost
+
+  vars:
+    output_msg: []
+    output_sections: {}
+
+  tasks:
+ 
+    - name: Check Infinite Loops inside playbook
+      ansible.builtin.include_role:
+        name: antiloops
+
+    - name: Show result messages
+      ansible.builtin.debug:
+        var: output_msg
+        
+    - name: Show result summary
+      ansible.builtin.debug:
+        var: output_sections
+
+    - name: Check if playbook has passed overall tests
+      ansible.builtin.debug:
+        msg: "The playbook has not passed overall tests"
+      when: false in output_sections.values()
+
+    - name: Check if playbook has passed overall tests
+      ansible.builtin.debug:
+        msg: "The playbook has passed overall tests"
+      when: false not in output_sections.values()

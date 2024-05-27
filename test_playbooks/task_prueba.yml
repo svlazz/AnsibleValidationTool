@@ -1,0 +1,21 @@
+---
+- name: prueba 
+  ansible.builtin.slurp:
+    src: ./playbook.yml
+  register: texto
+  vars:
+    mikey: value
+    mikey: value2
+- name: prueba sfasd 
+  ansible.builtin.slurp:
+    src: ./playbook_prueba.yml
+  register: texto
+- name: Define var
+  set_fact:
+    varfact: "valor 1"
+    
+- name: Define var 2
+  set_fact:
+    varfact: "valor 1"
+    varfact_b: "valor 2"
+    cacheable: false  

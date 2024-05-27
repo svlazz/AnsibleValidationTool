@@ -1,0 +1,7 @@
+---
+# defaults file for variable_duplication
+
+#key in wich store de result of the check
+result_key: "variable_duplication_ok"
+duplicated_keys_lines: []
+

@@ -1,0 +1,7 @@
+---
+- name: Playbook con comando no idempotente
+  hosts: localhost
+  gather_facts: false
+  tasks:
+    - name: Ejecutar un comando que no es idempotente
+      shell: "echo 'Hello, World!' >> /tmp/idempotency_test.txt"

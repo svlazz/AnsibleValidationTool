@@ -1,0 +1,55 @@
+---
+- name: "Error handling"
+  block:
+    - name: Check if file exists
+      ansible.builtin.stat:
+        path: "{{ path }}"
+      register: path_stat
+      ignore_errors: true
+
+    - name: Set var_naming variable
+      ansible.builtin.set_fact:
+        var_naming: []
+
+    - name: Get name
+      ansible.builtin.set_fact:
+        file_name: "{{ path | basename }}"
+
+    - name: "Check ansible lint"
+      with_items: "{{ lint_output.stdout_lines }}"
+      ansible.builtin.set_fact:
+        var_naming: "{{ var_naming | default([]) + [ item ] }}"
+      when: path_stat.stat.exists
+      when: item | regex_search('var-naming\[pattern\]')
+
+    - name: 'Set variable output_sections'
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_snake_case : False }) }}'
+      when: var_naming | length > 0 or not path_stat.stat.exists
+
+
+    - name: 'Set variable output_sections'
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_snake_case : True }) }}'
+      when: var_naming | length == 0 and path_stat.stat.exists
+
+    - name: "Add error msg to output_msg"
+      with_items: "{{ var_naming }}"
+      set_fact:
+        output_msg: "{{ output_msg + [ '[KO] ' + item ] }}"
+      when: var_naming | length > 0 and path_stat.stat.exists
+
+    - name: "Add no errors msg to output_msg"
+      set_fact:
+        output_msg: "{{ output_msg + [ '[OK] ' + 'All variables match with snake case format' ] }}"
+      when: var_naming | length == 0 and path_stat.stat.exists
+
+  rescue:
+
+    - name: NO SYNTAX ERRORS
+      ansible.builtin.debug:
+        msg: "[KO] ERRORS WITH SNAKE CASE"
+
+    - name: 'Set variable output_sections'
+      set_fact:
+        output_sections: '{{ output_sections | default({}) | combine ({  key_snake_case : False }) }}'

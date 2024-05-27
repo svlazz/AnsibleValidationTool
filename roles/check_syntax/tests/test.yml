@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  remote_user: josemanuel
+  roles:
+    - check_syntax
+  vars:
+    output_msg: []
+    output_sections: {}

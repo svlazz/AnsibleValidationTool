@@ -1,0 +1,15 @@
+---
+- name: Aasdsadsa dsa da as dsa
+  hosts: localhost
+  gather_facts: no
+ 
+  tasks:
+    - name: Bloque Super necesario no preguntes
+      block:
+        - name: "Bucle con lista (loop [1, 2, 3])"
+          debug:
+            var: xd
+          loop: [1, 2, 3]
+ 
+    - name: "Incluir otras tareas"
+      include_tasks: JT_infloop1_DEV_Azure.yml

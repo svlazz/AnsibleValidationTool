@@ -1,0 +1,9 @@
+---
+# vars file for check_syntax
+syntax_check: false
+file_exists: false
+readme_exists: false
+name_lowercase: false
+name_special_characters: false
+name_endswith_yaml: false
+default_message: "There are Syntax errors in file."

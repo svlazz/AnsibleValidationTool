@@ -1,0 +1,58 @@
+# tasks file for antiloops
+- name: Read playbook content
+  ansible.builtin.shell:
+    cmd: "cat -n {{ path }}"
+  register: playbook_content
+
+- name: Obtener el nombre del playbook
+  set_fact:
+    playbook_name: "{{ path | basename }}"
+
+- name: Inicializar la bandera de detección de bucle
+  set_fact:
+    loop_detected: False
+
+- name: Check infinite loops
+  block:
+    - name: detect infinite loop line
+      set_fact:
+        infinite_loop_line: "{{ playbook_content.stdout_lines | select('search', 'loop:') | list }}"
+      when: "'loop:' in playbook_content.stdout"
+
+    - name: Verify until false
+      set_fact:
+        infinite_loops: "{{ playbook_content.stdout_lines | select('search', 'until: false') | list }}"
+      when: infinite_loop_line is defined
+
+    - name: Verify until False
+      set_fact:
+        infinite_loops_upper: "{{ playbook_content.stdout_lines | select('search', 'until: False') | list }}"
+      when: infinite_loop_line is defined
+
+    - name: Detect recursive loops
+      set_fact:
+        self_referencing_loops: "{{ playbook_content.stdout_lines | select('search', 'include_tasks: ' + playbook_name) | list }}"
+
+    - name: Initialize loop_result
+      set_fact:
+        loop_result: []
+
+    - name: Save infinite loop result
+      set_fact:
+        loop_result: "{{ loop_result | default([]) + [item.split()[0]] }}"
+        loop_detected: True
+      loop: "{{ infinite_loops + infinite_loops_upper + self_referencing_loops }}"
+      when: infinite_loops | length > 0 or infinite_loops_upper | length > 0 or self_referencing_loops | length > 0
+
+    - name: Update message and status
+      set_fact:
+        output_msg: "{{ output_msg | default([]) + ['[KO] Infinite loop found at line: ' + (loop_result | join(', '))] }}"
+        output_sections: "{{ output_sections | default({}) | combine({ output_key: False }) }}"
+      when: loop_detected
+
+    - name: Message when no infinite loops are detected
+      set_fact:
+        output_msg: '{{ output_msg + ["[OK] No infinite loops were found."] }}'
+        output_sections: "{{ output_sections | default({}) | combine({ output_key: True }) }}"
+      when: not loop_detected
+  ignore_errors: true

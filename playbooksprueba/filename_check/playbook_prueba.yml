@@ -1,0 +1,35 @@
+---
+# Description
+- name: Playbook that pass all the tests. Example
+  hosts: localhost
+  gather_facts: true
+  vars:
+    app_name: "ExampleName"
+    app_version: "1.0"
+  tasks:
+    - name: Show application info
+      ansible.builtin.debug:
+        msg: "Application Name: {{ app_name }}, Version: {{ app_version }}"
+
+    - name: Install packages
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - nginx
+        - vim
+      become: yes
+
+    - name: Create application config file
+      ansible.builtin.template:
+        src: prueba.txt
+        dest: "/etc/{{ app_name }}/config.ini"
+      notify: Restart Application
+
+  handlers:
+    - name: Restart Application
+      ansible.builtin.service:
+        name: "{{ app_name }}"
+        state: restarted
+      become: yes
+

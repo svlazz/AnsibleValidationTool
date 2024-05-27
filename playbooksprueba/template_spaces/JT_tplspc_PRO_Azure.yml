@@ -1,0 +1,19 @@
+---
+- name: Description of playbook "{{ mikey }}"
+  hosts: localhost
+  gather_facts: true
+  vars:
+    expresion: "texto usado en expresion"
+  tasks:
+    - name: Template con inicio malo
+      debug:
+        msg: "{{expresion }}"
+    - name: Template con final malo
+      debug:
+        msg: "{{ expresion}}"
+    - name: Template con ambos extremos malos
+      debug:
+        msg: "{{expresion}}"
+    - name: Template ambos extremos malos
+      debug:
+        msg: "{{ expresion }}"

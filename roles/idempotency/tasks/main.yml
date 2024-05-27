@@ -1,0 +1,14 @@
+---
+
+- name: Verificacion SI idempotencia
+  set_fact:
+    output_msg: '{{ output_msg + ["[OK] Idempotency is met"] }}'
+    output_sections: '{{ output_sections | default({}) | combine ({ output_key : True }) }}'
+  when: "('shell:' not in playbook_content) and ('command:' not in playbook_content) and ('raw:' not in playbook_content)"
+
+
+- name: Verificacion NO idempotencia
+  set_fact:
+    output_msg: '{{ output_msg + ["[WARN] Idempotency not guaranteed"] }}'
+    output_sections: '{{ output_sections | default({}) | combine ({ output_key : True }) }}'
+  when: "('shell:' in playbook_content) or ('command:' in playbook_content) or ('raw:' in playbook_content)"

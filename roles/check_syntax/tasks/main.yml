@@ -1,0 +1,105 @@
+---
+    - name: Gets playbook directory
+      set_fact:
+        playbook_directory: "{{ path | dirname }}"
+
+    - name: Gets playbook name
+      set_fact:
+        playbook_name: "{{ path | basename }}"
+
+    - name: Show validation results
+      set_fact:
+        output_msg: "{{ output_msg + ['[KO] The file is not a yaml or yml file.'] }}"
+        output_sections: '{{ output_sections | default({}) | combine ({  result_key : false  }) }}'
+      when: not playbook_name.split('.')[1] in ('yaml','yml')
+ 
+    - name: Playbook validation
+      block:
+       
+        - name: Check if playbook file exists
+          stat:
+            path: "{{ path }}"
+          register: existe_archivo
+
+        - name: Check playbook syntax
+          ansible.builtin.command:
+            cmd: ansible-lint --profile min --skip-list=fqcn {{ path }}
+          register: ansible_validation
+          ignore_errors: true
+
+        - name: Update playbook_validation dictionary for name conditions
+          set_fact:
+            playbook_validation:
+              file_exists: "{{ existe_archivo.stat.exists }}"
+              syntax_check: "{{ ansible_validation.rc == 0 }}"
+
+        - name: Check if all playbook validation conditions are met
+          set_fact:
+            playbook_valid: "{{ playbook_validation | dict2items | map(attribute='value') | map('bool') | list }}"
+          run_once: true
+
+        - name: Check results
+          set_fact:
+            resultado: "{{ playbook_valid | map('bool') | select('==', true) | list | length == playbook_valid | length }}"
+
+        - name: Show validation results
+          set_fact:
+            output_msg: '{{ output_msg + ["[OK] The syntax check was successful."] }}'
+            output_sections: '{{ output_sections | default({}) | combine ({  result_key : resultado  }) }}'
+          when: resultado
+
+        - name: Line numbers in case of error
+          block:
+
+            - name: Check variable 
+              set_fact:
+                contains: "{{ 'load-failure[runtimeerror]' in ansible_validation.stdout_lines[0] }}"
+
+            - name: Extract error line number
+              set_fact:
+                error_line: "{{  (ansible_validation.stdout_lines | regex_search('^.*line (\\d+)', '\\1'))  }}"
+              when: contains
+
+        
+            - name: Extract error line number
+              set_fact:
+                error_line: "{{ ansible_validation.stdout_lines[1].split(':')[1] }}"
+              when: not contains
+
+            - name: Show validation results
+              set_fact:
+                output_msg: "{{ output_msg + ['[KO] There are Syntax errors on file, checks can not be carried out. ERRORS ON LINE: ' + error_line[0]  ] }}"
+                output_sections: '{{ output_sections | default({}) | combine ({  result_key : resultado  }) }}'
+              when:  contains
+
+            - name: Show validation results
+              set_fact:
+                output_msg: "{{ output_msg + ['[KO] There are Syntax errors on file, checks can not be carried out. ERRORS ON LINE: ' + error_line] }}"
+                output_sections: '{{ output_sections | default({}) | combine ({  result_key : resultado  }) }}'
+              when:  not contains
+
+          when: not resultado
+
+        - name: ansible_validation.stdout_lines
+          set_fact:
+            prueba: "{{ 'load-failure[runtimeerror]' in ansible_validation.stdout_lines }}"
+
+        - name: lalsall
+          debug:
+            var: prueba
+
+
+        - name: Extract error line number
+          debug:
+            var: error_line
+
+      always:
+      
+        - name:  File doesnt exists
+          debug:
+            msg: "File doesnt exists"
+          when: not existe_archivo.stat.exists
+
+        - name: Modulo
+          debug:
+            var: playbook_valid

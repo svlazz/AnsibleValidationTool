@@ -1,0 +1,18 @@
+---
+- vars:
+    output_msg: []
+    output_sections: {}
+
+  hosts: localhost
+  tasks:
+    - name: Detect duplicated variables
+      ansible.builtin.include_role:
+       name: variable_duplication
+ 
+    - name: Show result messages
+      ansible.builtin.debug:
+        var: output_msg
+        
+    - name: Show result summary
+      ansible.builtin.debug:
+        var: output_sections

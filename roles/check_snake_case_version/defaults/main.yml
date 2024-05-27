@@ -1,0 +1,4 @@
+---
+# defaults file for check_project
+key_snake_case: "snake_case_test_ok"
+key_version: "version_test_ok"

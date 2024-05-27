@@ -1,0 +1,10 @@
+---
+# defaults file for readmefile_check
+result_key: "readmefile_check_ok"
+readme_validation:
+   content_table: false
+   variables: false
+   description: false
+   use_cases: false
+   examples: false  
+default_message: "There are errors in file name."

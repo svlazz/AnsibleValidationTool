@@ -1,0 +1,42 @@
+---
+- name: Simple Ansible Playbook
+  hosts: localhost
+  gather_facts: no
+
+  tasks:
+    - name: Create a simple Block task
+      block:
+      - name: Install the Nginx package
+        yum:
+          name: nginx
+          state: present
+
+      - name: Ensure Nginx service is running
+        service:
+          name: nginx
+          state: started
+          enabled: yes
+
+      - name: Create a sample index.html file
+        copy:
+          content: "<html><body><h1>Hello, Ansible!</h1></body></html>"
+          dest: /usr/share/nginx/html/index.html
+
+      always:
+        - name: Install the Nginx package
+          yum:
+            name: nginx
+            state: present
+
+        - name: Ensure Nginx service is running
+          service:
+            name: nginx
+            state: started
+            enabled: yes
+
+        - name: Create a sample index.html file
+          copy:
+            content: "<html><body><h1>Hello, Ansible!</h1></body></html>"
+            dest: /usr/share/nginx/html/index.html
+
+

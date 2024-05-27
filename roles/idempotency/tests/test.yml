@@ -1,0 +1,17 @@
+---
+- hosts: localhost
+  remote_user: root
+  roles:
+    - idempotency
+  vars:
+    output_msg: []
+    output_sections: {}
+
+  tasks:
+    - name: Show result messages
+      ansible.builtin.debug:
+        var: output_msg
+          
+    - name: Show result summary
+      ansible.builtin.debug:
+        var: output_sections

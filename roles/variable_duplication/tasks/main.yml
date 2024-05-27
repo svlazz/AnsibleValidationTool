@@ -1,0 +1,46 @@
+---
+# tasks file for variable_duplication
+
+- name: "Block detect duplicate variables in set_fact and register"
+  block:
+
+  - name: Set duplicated key lines
+    ansible.builtin.set_fact:
+      duplicated_keys_lines: []
+
+  - name: Search for duplicated variables duplicated in register and set_fact sentences
+    detect_duplicated_parsed:
+      yaml_content: "{{ yaml_file_content }}"
+    register: detect_duplicated_output
+
+  - name: Store register and set_fact check result
+    ansible.builtin.set_fact:
+      output_msg: "{{ output_msg + [ detect_duplicated_output['msg'] ] }}"
+      output_sections: '{{ output_sections | default({}) | combine ({  result_key  : True }) }}'
+
+  rescue:
+  - ansible.builtin.set_fact:
+      output_msg: "{{ output_msg + [ detect_duplicated_output['msg'] ] }}"
+      output_sections: '{{ output_sections | default({}) | combine ({  result_key : False }) }}'
+
+- name: Extract key duplicates
+  set_fact: 
+    variable_duplication_result: '{{ lint_output.stdout_lines|select("search", "key-duplicates") }}'
+
+
+- name: Extract duplicated key lines
+  set_fact:
+    duplicated_keys_lines: "{{ duplicated_keys_lines + [item.split(':')[1]]  }}"
+  loop: "{{ variable_duplication_result}}"
+
+- name: Store variable duplication result
+  ansible.builtin.set_fact:
+    output_msg: "{{ output_msg + ['[KO] Duplicated keys in lines: '+(duplicated_keys_lines | join(', '))]}}"
+    output_sections: '{{ output_sections | default({}) | combine ({ result_key : False }) }}'
+  when:
+    - duplicated_keys_lines is defined
+    - duplicated_keys_lines | length > 0
+
+  
+
+ 

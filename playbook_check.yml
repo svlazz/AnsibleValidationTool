@@ -1,0 +1,133 @@
+---
+    - name: Check if file exists
+      stat:
+        path: "{{ path }}"
+      register: file_status
+
+    - name: Create output_msg and output_sections
+      ansible.builtin.set_fact:
+        output_msg: []
+        output_sections: {}
+
+    - name: Process tasks if file exists
+      block:
+
+        - name: File contents in plain text with numbers
+          ansible.builtin.command: cat -n "{{ path }}"
+          register: plain_file_content_numbers
+
+        - name: File contents in plain text without numbers
+          ansible.builtin.command: cat "{{ path }}"
+          register: plain_file_content
+
+        - name: Read YAML file contents in YAML format
+          set_fact:
+            yaml_file_content: "{{ plain_file_content.stdout| from_yaml }}"
+
+        - name: Chceck playbook syntax
+          ansible.builtin.include_role:
+            name: check_syntax
+
+        - name: Get ansible-lint output
+          ansible.builtin.shell: cd {{ path | dirname }} && ansible-lint --nocolor -t "yaml" -t idiom -q -p {{path}}
+          register: lint_output
+          ignore_errors: True
+
+        - name: Carry out checks if syntax in file is OK
+          block:
+            - name: Detect duplicated variables
+              ansible.builtin.include_role:
+                name: variable_duplication
+
+            - name: Check version and snake_case naming
+              ansible.builtin.include_role:
+                name: check_snake_case_version
+
+            - name: Check error control structures
+              ansible.builtin.include_role:
+                name: error_structure_check
+
+            - name: Detect nameless and wrong format name tasks
+              ansible.builtin.include_role:
+                name: namescheck
+
+            - name: Check if the filename follows some rules
+              ansible.builtin.include_role:
+                name: filename_check
+
+            - name: Check if readme file follows some rules
+              ansible.builtin.include_role:
+                name: readmefile_check
+
+            - name: Detect decrypted passwords
+              vars:
+                file_content: "{{ plain_file_content_numbers }}"
+              ansible.builtin.include_role:
+                name: decrypted_passwords
+
+            - name: Check Infinite Loops inside playbook
+              ansible.builtin.include_role:
+                name: antiloops
+
+            - name: Check spaces in Jinja template annotations
+              ansible.builtin.include_role:
+                name: template_spaces
+
+            - name: Check if idempotency is met
+              vars:
+                playbook_content: " {{ plain_file_content }} "
+              ansible.builtin.include_role:
+                name: idempotency
+                
+          when: output_sections.syntax_check_ok
+
+        - name: Show result messages
+          ansible.builtin.debug:
+            var: output_msg
+            
+        - name: Show result summary
+          ansible.builtin.debug:
+            var: output_sections
+
+        - name: Check if playbook has passed overall tests
+          ansible.builtin.debug:
+            msg: "The playbook has {{ 'not ' if false in output_sections.values() else '' }}passed overall tests"
+        
+        - name: Fail when any check did not pass OK
+          ansible.builtin.debug:
+            msg: "Not all check passed OK"
+          when: false in output_sections.values()
+
+        - name: Check if playbook has passed overall tests
+          ansible.builtin.set_fact:
+            overall_file: true
+          when: false not in output_sections.values()
+
+        - name: Check if playbook has passed overall tests
+          ansible.builtin.set_fact:
+            overall_file: false
+          when: false in output_sections.values()
+
+        - name: Change overall repo
+          ansible.builtin.set_fact:
+            overall_repo: false
+          when: false in output_sections.values()
+
+        - name: Add to repo_output_sections
+          ansible.builtin.set_fact:
+            repo_output_sections: "{{ repo_output_sections | combine({path: {'output_msg': output_msg, 'output_sections': output_sections, 'overall_file': overall_file}}) }}"
+
+        - name: Create a log
+          create_dir_and_log:
+            main_path: "{{ path }}"
+            output_log: "{{ output_msg }}"
+            output_values: "{{ output_sections }}"
+
+
+
+      when: file_status.stat.exists
+
+    - name: Notify if file does not exist
+      ansible.builtin.debug:
+        msg: "File {{ path }} was not found."
+      when: not file_status.stat.exists

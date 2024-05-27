@@ -1,0 +1,44 @@
+---
+# Description
+- name: Playbook that pass all the tests. Example
+  hosts: localhost
+  gather_facts: true
+  vars:
+    app_name: "ExampleName"
+    App_version: "1.0"
+    net_config: []
+    password: "nMRd0XOha"
+    app_name: "Exameple2"
+  tasks:
+    - name: Handle the error
+      block:
+        - name: Show application info
+          debug:
+            msg: "Application Name: {{app_name }}, Version: {{ app_version }}"
+
+        - name: Get info with shell
+          ansible.builtin.shell: cat /etc/os-release
+          register: os_info
+        
+        - name: Get info with shell
+          ansible.builtin.shell: cat /etc/net-config
+          register: net_config
+
+        - name: install packages
+          ansible.builtin.package:
+            name: "{{ item }}"
+            state: present
+          loop:
+            - nginx
+            - vim
+          become: yes
+          until: false
+
+      
+  handlers:
+    - name: Restart Application
+      ansible.builtin.service:
+        name: "{{ app_name }}"
+        state: restarted
+      become: yes
+

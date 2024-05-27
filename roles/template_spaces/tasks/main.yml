@@ -1,0 +1,27 @@
+---
+# tasks file for template_spaces
+- name: Error control
+  block:
+        
+    - name: Presuppose things will be ok
+      set_fact:
+        template_spaces_ok: True
+        output_sections: '{{ output_sections | default({}) | combine ({  result_key  : True }) }}'
+
+
+    - name: Loop file looking for bad template spaces format
+      set_fact:
+        output_msg: "{{ output_msg + [ '[KO] Bad template space found in line ' +( '%d'|format(item[1]))+ ': ' +item[0] ] }}"
+        output_sections: '{{ output_sections | default({}) | combine ({  result_key  : False }) }}'
+      when: (item[0]|regex_search(bad_template_start)) or
+            (item[0]|regex_search(bad_template_end))
+      loop: "{{ plain_file_content.stdout_lines |zip(range(1, plain_file_content.stdout_lines|length )) | selectattr('0', 'match', '.*{{.*|.*}}.*') | list }}"
+      no_log: true
+       
+  rescue:
+    - name: File do not exists
+      ansible.builtin.set_fact:
+        output_msg: "{{ output_msg + [ '[KO] File not found: ' + path  ] }}"
+        output_sections: '{{ output_sections | default({}) | combine ({  result_key  : False }) }}'
+
+ 

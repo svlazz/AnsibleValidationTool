@@ -1,0 +1,48 @@
+---
+- name: Defining required variables
+  set_fact:
+    filter_result_pass: []
+    filter_result_encr: []
+    pass_list:
+      - " password:"
+      - " pass:"
+      - " contraseña:"
+      - " contra:"
+      - " contrasenya:"
+      - " key:"
+      - " clave:"
+    value_list:
+      - "sha"
+      - "vault"
+      - "base64"
+
+- name: Search for lines with password
+  set_fact:
+    filter_result_pass: "{{ filter_result_pass | default([]) + file_content.stdout_lines|select('search',item) | list }}"
+  loop: "{{ pass_list }}"
+  ignore_errors: yes
+
+- name: Select decrypted passwords
+  set_fact:
+    filter_result_encr: "{{ filter_result_encr | default([]) | union(filter_result_pass | reject('search', value_list | join('|'))) | list }}"
+  loop: "{{ value_list }}"
+  ignore_errors: yes
+
+- name: Gets the lines where the passwords are in plain text
+  set_fact:
+    line_pass: "{{ line_pass | default([]) + [item.split()[0]] }}"
+  loop: "{{ filter_result_encr }}"
+  no_log: true
+  when: filter_result_encr | length > 0
+
+- name: Defines message in case of finding passwords in plain text
+  set_fact:
+    output_msg: '{{ output_msg + ["[KO] The plain text passwords were found on lines: " + (line_pass | join(", "))] }}'
+    output_sections: '{{ output_sections | default({}) | combine ({  result_key : False }) }}'
+  when: filter_result_encr | length > 0
+
+- name: Set variable to True if no passwords are found in plain text
+  set_fact:
+    output_msg: '{{ output_msg + ["[OK] There are not any plaintext passwords"] }}'
+    output_sections: '{{ output_sections | default({}) | combine ({  result_key : True }) }}'
+  when: filter_result_encr | length == 0

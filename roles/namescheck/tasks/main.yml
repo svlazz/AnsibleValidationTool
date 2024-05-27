@@ -1,0 +1,25 @@
+---
+# tasks file for namescheck
+- block:
+  - name: Check tasks names in the playbook
+    check_names:
+      plain_file_content: "{{ plain_file_content.stdout }}"
+    register: detect_tasks_output
+
+  - name: Set names_check_ok to True
+    ansible.builtin.set_fact:
+      output_sections: "{{ output_sections | default({}) | combine({ 'tasks_names_check_ok': True }) }}"
+
+  rescue:
+    - name: Set names_check_ok to False
+      ansible.builtin.set_fact:
+        output_sections: "{{ output_sections | default({}) | combine({ 'tasks_names_check_ok': False }) }}"
+  
+  always:
+    - name: Set fact notification msg
+      ansible.builtin.set_fact:
+        check_msg: "{{ '[OK] Tasks names are ok' if not detect_tasks_output.failed else detect_tasks_output['msg'] }}"
+    
+    - name: Notify main playbook
+      ansible.builtin.set_fact:
+        output_msg: "{{ output_msg + [check_msg] }}"
