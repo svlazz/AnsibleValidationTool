@@ -124,7 +124,7 @@ td:first-child {
                     <th>Mensajes</th>
                 </tr>
                 <tr>
-                    <td class="resultado">{{ "✅" if resultados.overall_file else "❌" }}</td>
+                    <td class="resultado">{{ "true" if resultados.overall_file else "false" }}</td>
                     <td class="mensajes">
                         <ul>
                         {% for mensaje in resultados.output_msg %}
