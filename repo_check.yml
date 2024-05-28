@@ -86,14 +86,14 @@
 
         - name: Create directory in $HOME
           ansible.builtin.file:
-            path: $HOME/dir_informe
+            path: /tmp/dir_informe
             state: directory
             mode: '0755'
 
         - name: Generate file from template
           template:
             src: web_log.html
-            dest: "/$HOME/dir_informe/informe_{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M-%S') }}.html"
+            dest: "/tmp/dir_informe/informe_{{ lookup('pipe', 'date +%Y-%m-%d_%H-%M-%S') }}.html"
 
         - name: Repo failed
           ansible.builtin.fail:
