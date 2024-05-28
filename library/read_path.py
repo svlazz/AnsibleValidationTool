@@ -70,8 +70,8 @@ def find_main_roles_tasks(path):
         elif "requirements.yaml" in path_roles:
             return main_roles_tasks
             
-    main_yml = glob.glob(f"{path}/roles/**/main.yml", recursive=True)
-    main_yaml = glob.glob(f"{path}/roles/**/main.yaml", recursive=True)
+    main_yml = glob.glob(f"{path}/roles/**/tasks/main.yml", recursive=True)
+    main_yaml = glob.glob(f"{path}/roles/**/tasks/main.yaml", recursive=True)
 
     main_roles_tasks.extend(main_yml)
     main_roles_tasks.extend(main_yaml)
