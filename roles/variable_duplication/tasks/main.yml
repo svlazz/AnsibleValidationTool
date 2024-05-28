@@ -10,7 +10,7 @@
 
   - name: Search for duplicated variables duplicated in register and set_fact sentences
     detect_duplicated_parsed:
-      yaml_content: "{{ yaml_file_content }}"
+      yaml_content: "{{ yaml_file_content | list }}"
     register: detect_duplicated_output
 
   - name: Store register and set_fact check result
