@@ -87,7 +87,7 @@ def filter_playbooks(file_paths):
         filtered_playbooks (list): A filtered list of file paths that are indeed playbooks.
     """
     filtered_playbooks = []
-    playbook_pattern = ["- name:", "tasks:"]
+    playbook_pattern = ["- name:", "tasks:", "roles:", "hosts:"]
 
     for file_path in file_paths:
         with open(file_path, 'r') as f:
