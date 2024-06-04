@@ -92,7 +92,11 @@ def filter_playbooks(file_paths):
     for file_path in file_paths:
         with open(file_path, 'r') as f:
             lines = f.readlines()
-            if any(playbook_pattern[0] in line or playbook_pattern[1] in line for line in lines):
+            if any(playbook_pattern[0] in line 
+                   or playbook_pattern[1] in line 
+                   or playbook_pattern[2] in line 
+                   or playbook_pattern[3] in line 
+                   for line in lines):
                 filtered_playbooks.append(file_path)
 
     return filtered_playbooks
