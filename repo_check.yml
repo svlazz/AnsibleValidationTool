@@ -33,7 +33,7 @@
         dest: "{{ repo_clone_path }}"
         clone: yes
         update: yes
-        version: dev
+        version: "{{ repo_branch }}"
       become: false
 
 
